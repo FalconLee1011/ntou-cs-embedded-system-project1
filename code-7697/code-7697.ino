@@ -10,7 +10,7 @@
 #include <PubSubClient.h>
 #include <SeeedOLED.h>
 
-#include <config.h>
+#include "config.h"
 
 #define MQTT_SUB_TOPIC "TESTE88D94"
 #define MQTT_SERVER_IP "140.121.198.196"
@@ -23,7 +23,6 @@ DHT DHT(A0, DHT11);
 WiFiClient mqttClient;
 PubSubClient client(mqttClient);
 
-void mqttCallback(char* topic, byte* payload, unsigned int len);
 void putStringToOLED(String S, int x=0, int y=0, boolean cl=true);
 
 void setup(){
@@ -43,11 +42,11 @@ void setup(){
   putStringToOLED(String(WiFi.localIP().toString()));
   DHT.begin();
   client.setServer(MQTT_SERVER_IP, MQTT_SERVER_PORT);
-  client.setCallback(mqttCallback);
   initMQTT();
 }
 
 void loop(){
+  upload();
   client.loop();
 }
 
@@ -56,7 +55,6 @@ void initMQTT(){
     if(client.connect(MQTT_CLIENT_ID)){
       Serial.println("MQTT has been connected.");
       putStringToOLED("MQTT Online");
-      client.subscribe(MQTT_SUB_TOPIC);
     }
     else{
       Serial.print("MQTT connection cannot be established, error ");
@@ -68,24 +66,16 @@ void initMQTT(){
   }
 }
 
-void mqttCallback(char* topic, byte* payload, unsigned int len){
-//  SeeedOled.clearDisplay();
-  char raw0 = ((char*)payload)[0];
-  String message = "[" + String(MQTT_SUB_TOPIC) + "] " + String(raw0);
-  Serial.println(message);
-  putStringToOLED(message);
-  switch(raw0){
-    case '0':
-      digitalWrite(RELAY, 0);
-      putStringToOLED("relay 0");
-      break;
-    case '1':
-      digitalWrite(RELAY, 1);
-      putStringToOLED("relay");
-      break;
-    default:
-      break; 
-  }
+void upload(){
+  String t = String(DHT.readTemperature());
+  String h = String(DHT.readHumidity());
+  String json = "{\"temp\":" + t + ", \"humd\":" + h +"}";
+  char json_char[json.length() + 1];
+  json.toCharArray(json_char, json.length() + 1);
+  client.publish(MQTT_SUB_TOPIC, json_char);
+  putStringToOLED("Published.");
+  delay(1000);
+  putStringToOLED("Publishing...");
 }
 
 void putStringToOLED(String S, int x, int y, boolean cl){

@@ -1,5 +1,8 @@
 import json
+from datetime import datetime
 from pprint import pprint
+
+from requests import post
 
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
@@ -9,34 +12,31 @@ from lib import config
 
 CONF = config.loadConfig("config/config.yaml").get("mqtt")
 
-HOST = None
-CNANNEL = None
-PORT = None
-MAC_ADDR = None
-
-
-def init():
-    global HOST, CNANNEL, PORT, MAC_ADDR
-    HOST = CONF.get("host")
-    CNANNEL = CONF.get("channel")
-    PORT = CONF.get("port")
-    MAC_ADDR = CONF.get("device-mac")
+HOST = CONF.get("host")
+CNANNEL = CONF.get("channel")
+PORT = CONF.get("port")
+MAC_ADDR = CONF.get("device-mac")
+BASE_URL = CONF.get("http-server-base-url")
 
 
 def connected(c, d, f, r):
-    global CNANNEL
     print("Connected!")
     c.subscribe(CNANNEL)
 
 
 def rcv(c, d, m):
-    global CNANNEL, MAC_ADDR
-    print(f"Recieved {str(m.payload, encoding='utf-8')}")
+    now = datetime.now()
+    payload = str(m.payload, encoding="utf-8")
+    print(f"[{now}] Recieved {payload}")
     c.subscribe(CNANNEL)
+    try:
+        post(f"{BASE_URL}/store", json={"raw": payload, "timestamp": str(now)})
+    except:
+        print("Connection to http server could not be establish.")
+        print("Upload failed.")
 
 
-def run():
-    global HOST, PORT
+def mian():
     client = mqtt.Client()
 
     client.on_connect = connected
@@ -47,5 +47,4 @@ def run():
 
 
 if __name__ == "__main__":
-    init()
-    run()
+    mian()
