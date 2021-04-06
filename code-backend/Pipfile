@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pymongo = "*"
+requests = "*"
+flask = "*"
+flask-cors = "*"
+paho-mqtt = "*"
+pyyaml = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
+
+[scripts]
+http="pipenv run python -m http_service"
+mqtt="pipenv run python -m mqtt_service"

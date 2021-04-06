@@ -1,0 +1,5 @@
+.venv
+config.yaml
+config.h
+.vscode
+node_modules

@@ -1,0 +1,11 @@
+version: "3.7"
+services:
+  parrot-mongo:
+    image: mongo
+    container_name: project1-mongo
+    restart: unless-stopped
+    ports:
+      - "5717:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: # Fill password here
